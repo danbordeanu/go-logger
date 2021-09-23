@@ -73,7 +73,7 @@ func SetCorrelationIdContextKey(key string) {
 	correlationIdContextKey = key
 }
 
-func Init(ctx context.Context) {
+func Init(ctx context.Context, enableLogLevelEndpoint, developmentMode bool) {
 	if logger != nil {
 		return
 	}
@@ -82,13 +82,12 @@ func Init(ctx context.Context) {
 		encoderConfig zapcore.EncoderConfig
 		atom          zap.AtomicLevel
 		loggerMode    []string
-		lsh           bool
 	)
 
 	correlationIdContextKey = "correlation_id"
 	correlationIdFieldKey = "correlation_id"
 
-	if devEnv, ok := ctx.Value("env_development").(bool); ok && devEnv {
+	if developmentMode {
 		loggerMode = append(loggerMode, "dev")
 		atom = zap.NewAtomicLevelAt(zap.DebugLevel)
 		encoderConfig = zapcore.EncoderConfig{
@@ -148,7 +147,7 @@ func Init(ctx context.Context) {
 		}
 	}
 
-	if lsh, ok := ctx.Value("logger_serveHttp").(bool); ok && lsh {
+	if enableLogLevelEndpoint {
 		loggerMode = append(loggerMode, "serveHttp")
 		go func() {
 			mux := http.NewServeMux()
@@ -163,7 +162,7 @@ func Init(ctx context.Context) {
 	}
 
 	l.Info("Logger initialized successfully", zap.Strings("logger_modes", loggerMode))
-	if lsh {
+	if enableLogLevelEndpoint {
 		l.Info("Logger HTTP Server active on :53835/loglevel")
 	}
 
