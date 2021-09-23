@@ -17,17 +17,29 @@ type CLogger struct {
 }
 
 var logger *CLogger
+var correlationIdContextKey string
+var correlationIdFieldKey string
+
+func (l *CLogger) WithContextCorrelationId(ctx context.Context) *CLogger {
+	correlationId := ctx.Value(correlationIdContextKey)
+	return l.WithCorrelationId(correlationId)
+}
+
+func (l *CSugaredLogger) WithContextCorrelationId(ctx context.Context) *CSugaredLogger {
+	correlationId := ctx.Value(correlationIdContextKey)
+	return l.WithCorrelationId(correlationId)
+}
 
 func (l *CLogger) WithCorrelationId(correlationId interface{}) *CLogger {
 	if s, ok := correlationId.(string); ok {
-		return &CLogger{*l.With(zap.Stringp("correlation_id", &s))}
+		return &CLogger{*l.With(zap.Stringp(correlationIdFieldKey, &s))}
 	}
 	return l
 }
 
 func (l *CSugaredLogger) WithCorrelationId(correlationId interface{}) *CSugaredLogger {
 	if s, ok := correlationId.(string); ok {
-		return &CSugaredLogger{*l.With(zap.Stringp("correlation_id", &s))}
+		return &CSugaredLogger{*l.With(zap.Stringp(correlationIdFieldKey, &s))}
 	}
 	return l
 }
@@ -47,15 +59,34 @@ func Logger() *CLogger {
 	return logger
 }
 
+func SetCorrelationIdFieldKey(key string) {
+	if key == "" {
+		return
+	}
+	correlationIdFieldKey = key
+}
+
+func SetCorrelationIdContextKey(key string) {
+	if key == "" {
+		return
+	}
+	correlationIdContextKey = key
+}
+
 func Init(ctx context.Context) {
-	if logger != nil {return}
+	if logger != nil {
+		return
+	}
 	var (
-		zapConfig zap.Config
+		zapConfig     zap.Config
 		encoderConfig zapcore.EncoderConfig
-		atom zap.AtomicLevel
-		loggerMode []string
-		lsh bool
+		atom          zap.AtomicLevel
+		loggerMode    []string
+		lsh           bool
 	)
+
+	correlationIdContextKey = "correlation_id"
+	correlationIdFieldKey = "correlation_id"
 
 	if devEnv, ok := ctx.Value("env_development").(bool); ok && devEnv {
 		loggerMode = append(loggerMode, "dev")
