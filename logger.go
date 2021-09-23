@@ -8,16 +8,39 @@ import (
 	"net/http"
 )
 
-var logger *zap.Logger
+type CSugaredLogger struct {
+	zap.SugaredLogger
+}
 
-func SugaredLogger() *zap.SugaredLogger {
+type CLogger struct {
+	zap.Logger
+}
+
+var logger *CLogger
+
+func (l *CLogger) WithCorrelationId(correlationId interface{}) *CLogger {
+	if s, ok := correlationId.(string); ok {
+		return &CLogger{*l.With(zap.Stringp("correlation_id", &s))}
+	}
+	return l
+}
+
+func (l *CSugaredLogger) WithCorrelationId(correlationId interface{}) *CSugaredLogger {
+	if s, ok := correlationId.(string); ok {
+		return &CSugaredLogger{*l.With(zap.Stringp("correlation_id", &s))}
+	}
+	return l
+}
+
+func SugaredLogger() *CSugaredLogger {
 	if logger == nil {
 		panic("logger not initialized. Call Init(ctx)")
 	}
-	return logger.Sugar()
+	l := logger.Sugar()
+	return &CSugaredLogger{*l}
 }
 
-func Logger() *zap.Logger {
+func Logger() *CLogger {
 	if logger == nil {
 		panic("logger not initialized. Call Init(ctx)")
 	}
@@ -113,5 +136,5 @@ func Init(ctx context.Context) {
 		l.Info("Logger HTTP Server active on :53835/loglevel")
 	}
 
-	logger = l
+	logger = &CLogger{*l}
 }
