@@ -8,10 +8,12 @@ import (
 	"net/http"
 )
 
+// CSugaredLogger is a superset of zap.SugaredLogger
 type CSugaredLogger struct {
 	zap.SugaredLogger
 }
 
+// CLogger is a superset of zap.Logger
 type CLogger struct {
 	zap.Logger
 }
@@ -20,16 +22,18 @@ var logger *CLogger
 var correlationIdContextKey string
 var correlationIdFieldKey string
 
+// WithContextCorrelationId returns an instance of the same logger with the correlation ID taken from the context added to it.
 func (l *CLogger) WithContextCorrelationId(ctx context.Context) *CLogger {
 	correlationId := ctx.Value(correlationIdContextKey)
 	return l.WithCorrelationId(correlationId)
 }
-
+// WithContextCorrelationId returns an instance of the same logger with the correlation ID taken from the context added to it.
 func (l *CSugaredLogger) WithContextCorrelationId(ctx context.Context) *CSugaredLogger {
 	correlationId := ctx.Value(correlationIdContextKey)
 	return l.WithCorrelationId(correlationId)
 }
 
+// WithCorrelationId returns an instance of the same logger with the correlation ID field added to it.
 func (l *CLogger) WithCorrelationId(correlationId interface{}) *CLogger {
 	if s, ok := correlationId.(string); ok {
 		return &CLogger{*l.With(zap.Stringp(correlationIdFieldKey, &s))}
@@ -37,6 +41,7 @@ func (l *CLogger) WithCorrelationId(correlationId interface{}) *CLogger {
 	return l
 }
 
+// WithCorrelationId returns an instance of the same logger with the correlation ID field added to it.
 func (l *CSugaredLogger) WithCorrelationId(correlationId interface{}) *CSugaredLogger {
 	if s, ok := correlationId.(string); ok {
 		return &CSugaredLogger{*l.With(zap.Stringp(correlationIdFieldKey, &s))}
@@ -44,6 +49,7 @@ func (l *CSugaredLogger) WithCorrelationId(correlationId interface{}) *CSugaredL
 	return l
 }
 
+// SugaredLogger returns an instance of the sugared logger. You must have initialized the logger prior to this call.
 func SugaredLogger() *CSugaredLogger {
 	if logger == nil {
 		panic("logger not initialized. Call Init(ctx)")
@@ -52,6 +58,7 @@ func SugaredLogger() *CSugaredLogger {
 	return &CSugaredLogger{*l}
 }
 
+// Logger returns an instance of the sugar-free logger. You must have initialized the logger prior to this call.
 func Logger() *CLogger {
 	if logger == nil {
 		panic("logger not initialized. Call Init(ctx)")
@@ -59,6 +66,7 @@ func Logger() *CLogger {
 	return logger
 }
 
+// SetCorrelationIdFieldKey sets the correlation ID field key in JSON responses. By default, it is "correlation_id"
 func SetCorrelationIdFieldKey(key string) {
 	if key == "" {
 		return
@@ -66,6 +74,7 @@ func SetCorrelationIdFieldKey(key string) {
 	correlationIdFieldKey = key
 }
 
+// SetCorrelationIdContextKey sets the correlation ID context key. By default, it is "correlation_id"
 func SetCorrelationIdContextKey(key string) {
 	if key == "" {
 		return
@@ -73,6 +82,19 @@ func SetCorrelationIdContextKey(key string) {
 	correlationIdContextKey = key
 }
 
+// Init bootstraps the logger. You must call this method just once at the
+// beginning of your application. The default log level is Info.
+//
+// Call Logger() or SugaredLogger() to retrieve an instance of the desired type
+// of logger. Use WithCorrelationId() or WithContextCorrelationId() to add a
+// correlation ID to your logs.
+//
+// If enableLogLevelEndpoint is true, then an HTTP endpoint on port 53835 at
+// /logger is exposed which can be used to change the log level dynamically. See
+// the Zap documentation for more information.
+//
+// If developmentMode is true, then the logLevel is set to Debug and caller
+// fields are more explicit. Do not enable this in production.
 func Init(ctx context.Context, enableLogLevelEndpoint, developmentMode bool) {
 	if logger != nil {
 		return
