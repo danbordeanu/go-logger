@@ -37,7 +37,7 @@ func (l *CSugaredLogger) WithContextCorrelationId(ctx context.Context) *CSugared
 // WithCorrelationId returns an instance of the same logger with the correlation ID field added to it.
 func (l *CLogger) WithCorrelationId(correlationId interface{}) *CLogger {
 	if s, ok := correlationId.(string); ok {
-		return &CLogger{*l.With(zap.Stringp(correlationIdFieldKey, &s))}
+		return &CLogger{*l.Logger.With(zap.Stringp(correlationIdFieldKey, &s))}
 	}
 	return l
 }
@@ -45,9 +45,17 @@ func (l *CLogger) WithCorrelationId(correlationId interface{}) *CLogger {
 // WithCorrelationId returns an instance of the same logger with the correlation ID field added to it.
 func (l *CSugaredLogger) WithCorrelationId(correlationId interface{}) *CSugaredLogger {
 	if s, ok := correlationId.(string); ok {
-		return &CSugaredLogger{*l.With(zap.Stringp(correlationIdFieldKey, &s))}
+		return &CSugaredLogger{*l.SugaredLogger.With(zap.Stringp(correlationIdFieldKey, &s))}
 	}
 	return l
+}
+
+func (l *CLogger) With(args ...zap.Field) *CLogger {
+	return &CLogger{*l.Logger.With(args...)}
+}
+
+func (l *CSugaredLogger) With(args ...interface{}) *CSugaredLogger {
+	return &CSugaredLogger{*l.SugaredLogger.With(args...)}
 }
 
 // SugaredLogger returns an instance of the sugared logger. You must have initialized the logger prior to this call.
@@ -193,15 +201,15 @@ func Init(ctx context.Context, enableLogLevelEndpoint, developmentMode bool) {
 }
 
 func (l *CSugaredLogger) Print(args ...interface{}) {
-	l.Debug(args)
+	l.Debug(args...)
 }
 
 func (l *CSugaredLogger) Println(args ...interface{}) {
-	l.Debug(args)
+	l.Debug(args...)
 }
 
 func (l *CSugaredLogger) Printf(format string, args ...interface{}) {
-	l.Debugf(format, args)
+	l.Debugf(format, args...)
 }
 
 func (l *CSugaredLogger) Fatalln(args ...interface{}) {
