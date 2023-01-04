@@ -203,3 +203,7 @@ func (l *CSugaredLogger) Println(args ...interface{}) {
 func (l *CSugaredLogger) Printf(format string, args ...interface{}) {
 	l.Debugf(format, args)
 }
+
+func (l *CSugaredLogger) Fatalln(args ...interface{}) {
+	l.Fatal(args)
+}
