@@ -27,6 +27,7 @@ func (l *CLogger) WithContextCorrelationId(ctx context.Context) *CLogger {
 	correlationId := ctx.Value(correlationIdContextKey)
 	return l.WithCorrelationId(correlationId)
 }
+
 // WithContextCorrelationId returns an instance of the same logger with the correlation ID taken from the context added to it.
 func (l *CSugaredLogger) WithContextCorrelationId(ctx context.Context) *CSugaredLogger {
 	correlationId := ctx.Value(correlationIdContextKey)
@@ -189,4 +190,16 @@ func Init(ctx context.Context, enableLogLevelEndpoint, developmentMode bool) {
 	}
 
 	logger = &CLogger{*l}
+}
+
+func (l *CSugaredLogger) Print(args ...interface{}) {
+	l.Debug(args)
+}
+
+func (l *CSugaredLogger) Println(args ...interface{}) {
+	l.Debug(args)
+}
+
+func (l *CSugaredLogger) Printf(format string, args ...interface{}) {
+	l.Debugf(format, args)
 }
