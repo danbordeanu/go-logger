@@ -168,7 +168,7 @@ func Init(ctx context.Context, enableLogLevelEndpoint, developmentMode bool) {
 			Level:             atom,
 			Development:       false,
 			DisableCaller:     false,
-			DisableStacktrace: false,
+			DisableStacktrace: true,
 			Sampling:          &zap.SamplingConfig{Initial: 100, Thereafter: 100},
 			Encoding:          "json",
 			EncoderConfig:     encoderConfig,
