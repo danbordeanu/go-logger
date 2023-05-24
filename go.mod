@@ -1,4 +1,4 @@
-module github.com/coderollers/go-logger
+module github.com/danbordeanu/go-logger
 
 go 1.16
 
